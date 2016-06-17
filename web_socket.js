@@ -5,6 +5,25 @@
 
 (function() {
   
+  /**
+   * make a uniform WebSocket.onReady(function(){var ws = new WebSocket();}) for use
+   */
+  function initWebSocketReadyCallback(WebSocket, isReady){
+    WebSocket.__readyCallbacks = [];
+
+    WebSocket.__isReady = isReady === true : true : false;
+    WebSocket.onReady = function(listener){
+      if (WebSocket.__isReady) {
+        listener();
+        return;
+      }
+      WebSocket.__readyCallbacks.push(listener);
+    };
+  }
+  if (window.WebSocket || window.MozWebSocket) {
+    initWebSocketReadyCallback(window.WebSocket || window.MozWebSocket, true);
+  }
+
   if (window.WEB_SOCKET_FORCE_FLASH) {
     // Keeps going.
   } else if (window.WebSocket) {
@@ -246,6 +265,7 @@
     });
   };
 
+
   /**
    * Loads WebSocketMain.swf and creates WebSocketMain object in Flash.
    */
@@ -307,8 +327,15 @@
       {hasPriority: true, swliveconnect : true, allowScriptAccess: "always"},
       null,
       function(e) {
+        var i = WebSocket.__readyCallbacks.length - 1;
         if (!e.success) {
           logger.error("[WebSocket] swfobject.embedSWF failed");
+        } else {
+
+          // call for websocket swf ready
+          for(i; i >= 0; --i) {
+            WebSocket.__readyCallbacks[i]();
+          }
         }
       }
     );
@@ -391,6 +418,7 @@
     //   This fires immediately if web_socket.js is dynamically loaded after
     //   the document is loaded.
     swfobject.addDomLoadEvent(function() {
+      initWebSocketReadyCallback(WebSocket, false);
       WebSocket.__initialize();
     });
   }
