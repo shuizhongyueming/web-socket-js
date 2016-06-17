@@ -11,7 +11,7 @@
   function initWebSocketReadyCallback(WebSocket, isReady){
     WebSocket.__readyCallbacks = [];
 
-    WebSocket.__isReady = isReady === true : true : false;
+    WebSocket.__isReady = isReady === true ? true : false;
     WebSocket.onReady = function(listener){
       if (WebSocket.__isReady) {
         listener();
